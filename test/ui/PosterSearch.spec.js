@@ -14,7 +14,11 @@ describe('Poster Search', () => {
   })
   beforeEach(async () => {
     await jestPuppeteer.resetPage()
-    return await page.goto('http://localhost:3000')
+    const url = 
+      process.env.NODE_ENV === 'build'
+      ?'http://localhost:5000'
+      :'http://localhost:3000'
+    return await page.goto(url)
   })
  
   it("doesn't let me search until I've typed at least 3 characters", async () => {
@@ -44,9 +48,83 @@ describe('Poster Search', () => {
     await expect(page).toClick('#search-button')
   })
   xit('tells me when there are no results', () => {})
-  xit('handles api errors', () => {})
-  xit('handles network errors', () => {})
+  it('handles api errors', async done => {
+    await page.setRequestInterception(true)
+    page.on('request', async req => {
+      if (req.url().includes('omdbapi.com')) {
+        await req.respond({
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify(apiErrorResponse),
+          contentType: 'application/json'
+        })
+      }
+    })
+    page.on('response', async res => {
+      if (res.url().includes('omdbapi.com')) {
+        const msg = await page.$('#msg')
+        await expect(msg).toMatch(apiErrorResponse.Error)
+        await page.setRequestInterception(false)
+        done()
+      }
+    })
+    await expect(page).toFill('#movie-name', 'the')
+    await expect(page).toClick('#search-button')
+  })
+  it('handles network errors', async done => {
+    expect.assertions(3)
+    await page.setRequestInterception(true)
+    page.on('request', async req => {
+      if(req.url().includes('omdbapi.com')) {
+        await req.abort('failed')
+        const msg = await page.$('#msg')
+        await expect(msg).toMatch(
+          'Something went wrong. Please try again later. '
+        )
+        await page.setRequestInterception(false)
+        done()
+      }
+    })
+    await expect(page).toFill('#movie-name', 'star')
+    await expect(page).toClick('#search-button')
+
+  })
   xit('tells me how many results were found and how many are being displayed', () => {})
-  xit('displays all results', () => {})
+  it('displays all results', async done => {
+    expect.assertions(12)
+    await page.setRequestInterception(true)
+    page.on('request', async req =>{
+
+      if(req.url().includes('omdbapi.com')) {
+        if(process.env.NODE_ENV === 'build'){
+          await req.continue()
+        }else{
+          await req.respond({
+            headers: {'Access-Control-Allow-Origin': "*"},
+            body: JSON.stringify(dummyPosters),
+            contentType: 'application/json'
+          })
+        }
+      }
+    })
+
+    page.on('response', async res => {
+      if(res.url().includes('omdbapi.com')) {
+        const results = 
+        process.env.NODE_ENV === 'build'? await res.json() : dummyPosters
+        
+        await Promise.all(
+          results.Search.map(movie => 
+            expect(page).toMatchElement(`img[src="${movie.Poster}"]`)
+          )
+        ).then(async () => {
+          await page.setRequestInterception(false)
+          done()
+        })
+      }
+    })
+    await expect(page).toFill('#movie-name', 'star')
+    await expect(page).toClick('#search-button')
+  })
+  
   xit('displays a placeholder when no poster is available', () => {})
 })

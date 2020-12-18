@@ -8,6 +8,7 @@ export default function PosterSearch () {
   const [msg, setMsg] = useState(`
   Enter at least ${MINMOVIELENGTH} letters from the movie's title
   `)
+  const [posters, setPosters] = useState([]);
 
   function handleInput ({target: {value, minLength} }) {
     setDisableSearch(value.length < minLength)
@@ -20,6 +21,19 @@ export default function PosterSearch () {
     fetch(`
     http://www.omdbapi.com/?s=${movieName}&apikey=${api_key}
     `)
+    .then(resp => resp.json())
+    .then(results => {
+      if(results.Response === 'True'){
+        setPosters(results.Search)
+      }else {
+        if(results.Error === 'Too many results.'){
+          setMsg(results.Error)
+        }else if(results.Error === 'Movie not found!'){
+          setMsg('Something went wrong. Please try again later. ')
+        }
+      }
+    })
+
   }
   return (
     <>
@@ -53,7 +67,16 @@ export default function PosterSearch () {
           </p>
           <p id='msg' >{msg}</p>
         </main>
-        <section id='poster-grid' className='PosterGrid' />
+        <section id='poster-grid' className='PosterGrid'>
+          {posters.map(movie => (
+            <img 
+              key={movie.Title}
+              src={movie.Poster}
+              alt={movie.Title}
+              title={movie.Title}
+            />
+          ))}
+        </section> 
       </section>
     </>
   )
