@@ -26,12 +26,27 @@ export default function PosterSearch () {
       if(results.Response === 'True'){
         setPosters(results.Search)
       }else {
+
         if(results.Error === 'Too many results.'){
           setMsg(results.Error)
-        }else if(results.Error === 'Movie not found!'){
-          setMsg('Something went wrong. Please try again later. ')
+        } 
+       
+        else if (results.Response === "False") {
+          setMsg(`Sorry, we couldn't find that one. Please try again.`)
+        } 
+        if(results.Response === 'True' && results.totalResults) {
+          setMsg(
+            `Now showing the first ${results.movies.length} results of ${
+              results.total
+            }`
+          )
+          setPosters(results.movies)
+          setDisableSearch(false)
         }
       }
+    })
+    .catch(e => {
+      setMsg('Something went wrong. Please try again later.')
     })
 
   }
