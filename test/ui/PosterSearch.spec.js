@@ -19,7 +19,7 @@ describe('Poster Search', () => {
  
   it("doesn't let me search until I've typed at least 3 characters", async () => {
     expect(await page.$eval('#search-button', btn => btn.disabled)).toBe(true)
-    await expect(page).toFill('#movie-name', 'abc',{delay:250})
+    await expect(page).toFill('#movie-name', 'abc')
     return expect(await page.$eval('#search-button',btn => btn.disabled)).toBe(false)
   })
   it("tells me when we're searching", async done => {
@@ -36,8 +36,12 @@ describe('Poster Search', () => {
           body:JSON.stringify(dummyPosters),
           contentType:'application/json'
         })
+
+        done()
       }
     })
+    await expect(page).toFill('#movie-name', 'star')
+    await expect(page).toClick('#search-button')
   })
   xit('tells me when there are no results', () => {})
   xit('handles api errors', () => {})

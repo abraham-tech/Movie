@@ -2,6 +2,7 @@ import React,{useState} from 'react'
 
 export default function PosterSearch () {
   const MINMOVIELENGTH = 3;
+  const api_key = "c0359896"
   const [disableSearch, setDisableSearch] = useState(true);
   const [movieName, setMovieName] = useState('')
   const [msg, setMsg] = useState(`
@@ -11,6 +12,14 @@ export default function PosterSearch () {
   function handleInput ({target: {value, minLength} }) {
     setDisableSearch(value.length < minLength)
     setMovieName(value)
+  }
+
+  function handleClick(e){
+    e.preventDefault()
+    setMsg('Searching...')
+    fetch(`
+    http://www.omdbapi.com/?s=${movieName}&apikey=${api_key}
+    `)
   }
   return (
     <>
@@ -36,12 +45,13 @@ export default function PosterSearch () {
             />
             <button id='search-button' className='searchButton'
             disabled= {disableSearch}
+            onClick={handleClick}
             >
               Search
             </button>
             <br />
           </p>
-          <p id='msg' />
+          <p id='msg' >{msg}</p>
         </main>
         <section id='poster-grid' className='PosterGrid' />
       </section>
