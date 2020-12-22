@@ -54,8 +54,8 @@ export default function PosterSearch () {
     <>
       <section className='PosterSearch'>
         <header className='header'>
-          <h1>Posterz</h1>
-          <h3>Find your favourite movie posters.</h3>
+          <h1>Movie Posters</h1>
+          <h3>Find your favorite movie.</h3>
         </header>
         <main>
           <p>
